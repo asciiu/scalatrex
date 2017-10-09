@@ -16,13 +16,21 @@ class BittrexClientSpec extends FlatSpec with Matchers {
   // test keys
   val apikey = "21f18e3a51df4cedb4e9dd388ce298f6"
   val secret = "0119247481504014858d1ecdf00f2f50"
-  val client = new BittrexClient(apikey, secret)
+  val authorization = Auth(apikey, secret)
+  val client = new BittrexClient()
 
   "The BittrexClient" should "get account balance" in {
     val currency = "BTC"
-    val futureBalance = client.accountGetBalance(currency)
-    val balance = Await.result(futureBalance, 5.second)
+    val futureBalance = client.accountGetBalance(authorization, currency)
+    val balance = Await.result(futureBalance, 5 second)
 
     balance.Currency shouldEqual currency
+  }
+
+  it should "retrieve all account balances" in {
+    val futureBalances = client.accountGetBalances(authorization)
+    val balances = Await.result(futureBalances, 5 second)
+
+    balances.length should be > 0
   }
 }

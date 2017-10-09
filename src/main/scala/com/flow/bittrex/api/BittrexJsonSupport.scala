@@ -8,8 +8,9 @@ import spray.json.DefaultJsonProtocol
 
 
 case class BittrexGetBalanceResult(Currency: String, Balance: Float, Available: Float, Pending: Float,
-                                   CryptoAddress: String)
+                                   CryptoAddress: Option[String])
 case class BittrexGetBalanceResponse(success: Boolean, message: String, result: BittrexGetBalanceResult)
+case class BittrexGetBalancesResponse(success: Boolean, message: String, result: List[BittrexGetBalanceResult])
 
 // collect your json format instances into a support trait:
 trait BittrexJsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
@@ -17,7 +18,8 @@ trait BittrexJsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
   //implicit val nonce     = jsonFormat2(BittrexNonce)
   //implicit val summary   = jsonFormat3(BittrexSummary)
 
-  implicit val getBalanceResult   = jsonFormat5(BittrexGetBalanceResult)
-  implicit val getBalanceResponse = jsonFormat3(BittrexGetBalanceResponse)
+  implicit val getBalanceResult    = jsonFormat5(BittrexGetBalanceResult)
+  implicit val getBalanceResponse  = jsonFormat3(BittrexGetBalanceResponse)
+  implicit val getBalancesResponse = jsonFormat3(BittrexGetBalancesResponse)
 }
 

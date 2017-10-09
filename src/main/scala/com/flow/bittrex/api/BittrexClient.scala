@@ -39,11 +39,8 @@ object BittrexClient {
 /**
   * Created by bishop on 9/7/16.
   */
-class BittrexClient (apiKey: String,
-                     secretKey: String)
-                    (implicit context: ExecutionContext,
-                     materializer: ActorMaterializer)
-  extends Auth(apiKey, secretKey) with BittrexJsonSupport {
+class BittrexClient(implicit context: ExecutionContext, materializer: ActorMaterializer)
+  extends BittrexJsonSupport {
 
   val wsClient = StandaloneAhcWSClient()
 
@@ -67,30 +64,39 @@ class BittrexClient (apiKey: String,
     * ***************************************************************/
 
   /**
-    * Returns all of your available balances.
+    * Returns all currency balances.
+    * @param auth
+    * @return BittrexGetBalanceResult wrapped in future
     */
-  def accountGetBalances(): Unit = {
+  def accountGetBalances(auth: Auth): Future[List[BittrexGetBalanceResult]] = {
     val endpoint = "account/getbalances"
 
     val path = wsClient.url(s"$base_url/$endpoint")
-      .addQueryStringParameters("apikey" -> apiKey)
+      .addQueryStringParameters("apikey" -> auth.apiKey)
       .addQueryStringParameters("nonce" -> generateNonce)
 
-    setAuthenticationHeaders(path)
-      .get().map(
-      // TODO deserialize
-      response => println(response.body))
+    auth.bittrexRequest(path)
+      .get()
+      .flatMap { response =>
+        Unmarshal(response.body).to[BittrexGetBalancesResponse].map(bal => bal.result)
+      }
   }
 
-  def accountGetBalance(currency: String = "BTC"): Future[BittrexGetBalanceResult] = {
+  /**
+    * Returns account balance for a single currency
+    * @param auth
+    * @param currency name of currency. e.g BTC, ETC, ETH...
+    * @return BittrexGetBalanceResult wrapped in future
+    */
+  def accountGetBalance(auth: Auth, currency: String = "BTC"): Future[BittrexGetBalanceResult] = {
     val endpoint = "account/getbalance"
 
     val path = wsClient.url(s"$base_url/$endpoint")
-      .addQueryStringParameters("apikey" -> apiKey)
+      .addQueryStringParameters("apikey" -> auth.apiKey)
       .addQueryStringParameters("nonce" -> generateNonce)
       .addQueryStringParameters("currency" -> currency)
 
-    setAuthenticationHeaders(path)
+    auth.bittrexRequest(path)
       .get()
       .flatMap { response =>
         Unmarshal(response.body).to[BittrexGetBalanceResponse].map(bal => bal.result)

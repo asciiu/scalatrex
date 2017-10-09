@@ -8,23 +8,7 @@ import play.api.libs.ws.StandaloneWSRequest
 /**
   * Created by bishop on 9/7/16.
   */
-class Auth(apiKey: String, secretKey: String) {
-
-  protected def generateSignature(uri: String): String = {
-    val shaMac = Mac.getInstance("HmacSHA512")
-    val keyspec = new SecretKeySpec(secretKey.getBytes(), "HmacSHA512")
-    shaMac.init(keyspec)
-
-    val macData = shaMac.doFinal(uri.getBytes())
-    bytesToHex(macData)
-  }
-
-  def setAuthenticationHeaders(request: StandaloneWSRequest): StandaloneWSRequest = {
-    val uri = request.uri.toString
-    val signature = generateSignature(uri)
-
-    request.addHttpHeaders("apisign" -> signature)
-  }
+case class Auth(val apiKey: String, secretKey: String) {
 
   private def bytesToHex(bytes: Array[Byte]): String = {
     val hexArray = "0123456789ABCDEF".toCharArray
@@ -43,5 +27,21 @@ class Auth(apiKey: String, secretKey: String) {
       }
     }
     new String(hexChars)
+  }
+
+  protected def generateSignature(uri: String): String = {
+    val shaMac = Mac.getInstance("HmacSHA512")
+    val keyspec = new SecretKeySpec(secretKey.getBytes(), "HmacSHA512")
+    shaMac.init(keyspec)
+
+    val macData = shaMac.doFinal(uri.getBytes())
+    bytesToHex(macData)
+  }
+
+  def bittrexRequest(request: StandaloneWSRequest): StandaloneWSRequest = {
+    val uri = request.uri.toString
+    val signature = generateSignature(uri)
+
+    request.addHttpHeaders("apisign" -> signature)
   }
 }
