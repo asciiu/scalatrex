@@ -8,39 +8,13 @@ import play.api.libs.ws.ahc.StandaloneAhcWSClient
 import scala.concurrent.{ExecutionContext, Future}
 import scala.language.postfixOps
 
-object BittrexClient {
-  case class CurrencyBalance(marketName: String,
-                             available: BigDecimal,
-                             onOrders: BigDecimal,
-                             btcValue: BigDecimal)
-
-  case class MoveOrderStatus(status: Int, orderNumber: Long)
-
-  case class Order(orderNumber: Long,
-                   side: String,
-                   rate: BigDecimal,
-                   startingAmount: BigDecimal,
-                   amount: BigDecimal,
-                   total: BigDecimal)
-
-  //case class OrderNumber(orderNumber: Long,
-  //                      resultingTrades: List[Trade])
-
-  case class OrdersOpened(marketName: String, orders: List[Order])
-
-  //case class Trade(date: DateTime,
-  //                 amount: BigDecimal,
-  //                 rate: BigDecimal,
-  //                 total: BigDecimal,
-  //                 tradeId: Long,
-  //                 `type`: String)
-}
-
 /**
   * Created by bishop on 9/7/16.
   */
 class BittrexClient(implicit context: ExecutionContext, materializer: ActorMaterializer)
   extends BittrexJsonSupport {
+
+  import Bittrex._
 
   val wsClient = StandaloneAhcWSClient()
 
@@ -66,9 +40,9 @@ class BittrexClient(implicit context: ExecutionContext, materializer: ActorMater
   /**
     * Returns all currency balances.
     * @param auth
-    * @return BittrexGetBalanceResult wrapped in future
+    * @return list of BalanceResult wrapped in future
     */
-  def accountGetBalances(auth: Auth): Future[List[BittrexGetBalanceResult]] = {
+  def accountGetBalances(auth: Auth): Future[List[BalanceResult]] = {
     val endpoint = "account/getbalances"
 
     val path = wsClient.url(s"$base_url/$endpoint")
@@ -78,7 +52,7 @@ class BittrexClient(implicit context: ExecutionContext, materializer: ActorMater
     auth.bittrexRequest(path)
       .get()
       .flatMap { response =>
-        Unmarshal(response.body).to[BittrexGetBalancesResponse].map(bal => bal.result)
+        Unmarshal(response.body).to[BalancesResponse].map(bal => bal.result)
       }
   }
 
@@ -86,9 +60,9 @@ class BittrexClient(implicit context: ExecutionContext, materializer: ActorMater
     * Returns account balance for a single currency
     * @param auth
     * @param currency name of currency. e.g BTC, ETC, ETH...
-    * @return BittrexGetBalanceResult wrapped in future
+    * @return BalanceResult wrapped in future
     */
-  def accountGetBalance(auth: Auth, currency: String = "BTC"): Future[BittrexGetBalanceResult] = {
+  def accountGetBalance(auth: Auth, currency: String = "BTC"): Future[BalanceResult] = {
     val endpoint = "account/getbalance"
 
     val path = wsClient.url(s"$base_url/$endpoint")
@@ -99,7 +73,53 @@ class BittrexClient(implicit context: ExecutionContext, materializer: ActorMater
     auth.bittrexRequest(path)
       .get()
       .flatMap { response =>
-        Unmarshal(response.body).to[BittrexGetBalanceResponse].map(bal => bal.result)
+        Unmarshal(response.body).to[BalanceResponse].map(bal => bal.result)
+      }
+  }
+
+  /**
+    * Returns a deposit address for the specified currency.
+    * @param auth
+    * @param currency name
+    * @return future wrapped DepositAddressResult
+    */
+  def accountGetDepositAddress(auth: Auth, currency: String = "BTC"): Future[DepositAddressResult] = {
+    val endpoint = "account/getdepositaddress"
+
+    val path = wsClient.url(s"$base_url/$endpoint")
+      .addQueryStringParameters("apikey" -> auth.apiKey)
+      .addQueryStringParameters("nonce" -> generateNonce)
+      .addQueryStringParameters("currency" -> currency)
+
+    auth.bittrexRequest(path)
+      .get()
+      .flatMap { response =>
+        Unmarshal(response.body).to[DepositAddressResponse].map(bal => bal.result)
+      }
+
+  }
+
+  // TODO /account/withdraw
+  // TODO /account/getorder
+  // TODO /account/getdeposithistory
+  // TODO /account/getwithdrawalhistory
+
+  def accountGetOrderHistory(auth: Auth, market: Option[String] = None): Future[List[OrderHistoryResult]] = {
+    val endpoint = "account/getorderhistory"
+
+    val path = wsClient.url(s"$base_url/$endpoint")
+      .addQueryStringParameters("apikey" -> auth.apiKey)
+      .addQueryStringParameters("nonce"  -> generateNonce)
+
+    if (market.nonEmpty) {
+      path.addQueryStringParameters("market" -> market.get)
+    }
+
+    auth.bittrexRequest(path)
+      .get()
+      .flatMap { response =>
+        Unmarshal(response.body).to[OrderHistoryResponse].map(bal => bal.result)
       }
   }
 }
+
