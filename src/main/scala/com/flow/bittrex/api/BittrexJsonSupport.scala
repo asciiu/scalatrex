@@ -1,11 +1,7 @@
 package com.flow.bittrex.api
 
-import java.util.UUID
-
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-
 import spray.json.DefaultJsonProtocol
-
 
 object Bittrex {
 

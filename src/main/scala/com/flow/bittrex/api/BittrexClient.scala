@@ -146,7 +146,13 @@ class BittrexClient(implicit context: ExecutionContext, materializer: ActorMater
 
   // TODO /market/selllimit
   // TODO /market/cancel
-  // TOdO /market/getopenorders
+
+  /**
+    * Get open orders.
+    * @param auth
+    * @param market option name of the market
+    * @return future wrapped GetOpenOrdersResponse
+    */
   def marketGetOpenOrders(auth: Auth, market: Option[String] = None): Future[GetOpenOrdersResponse] = {
     val endpoint = "market/getopenorders"
 
