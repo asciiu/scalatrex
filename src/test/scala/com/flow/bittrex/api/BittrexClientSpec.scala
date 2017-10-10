@@ -63,4 +63,13 @@ class BittrexClientSpec extends FlatSpec with Matchers {
     response.success shouldEqual true
     response.result.get.length should be > 0
   }
+
+  it should "get open orders" in {
+    val currency = "BTC"
+    val futureOrders = client.marketGetOpenOrders(authorization)
+    val response = Await.result(futureOrders, 5 second)
+
+    response.success shouldEqual true
+    response.result.get.length should be > 0
+  }
 }

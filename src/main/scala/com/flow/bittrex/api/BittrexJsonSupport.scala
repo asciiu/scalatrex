@@ -29,36 +29,47 @@ object Bittrex {
                                 Condition: String,
                                 ImmediateOrCancel: Boolean,
                                 Closed: String)
-  // Responses
-  //case class BalanceResponse(success: Boolean, message: String, result: BalanceResult)
 
-  //case class BalancesResponse(success: Boolean, message: String, result: List[BalanceResult])
+  case class OrderResult(OrderUuid: String,
+                         Exchange: String,
+                         OrderType: String,
+                         Limit: Float,
+                         Quantity: Float,
+                         QuantityRemaining: Float,
+                         CommissionPaid: Float,
+                         Price: Float,
+                         CancelInitiated: Boolean,
+                         Opened: String,
+                         ImmediateOrCancel: Boolean,
+                         IsConditional: Boolean)
 
-  //case class DepositAddressResponse(success: Boolean, message: String, result: DepositAddressResult)
+  // Standard bittrex response json has success, message, and option result
+  case class StandardResponse[T](success: Boolean, message: String, result: Option[T])
 
-  //case class OrderHistoryResponse(success: Boolean, message: String, result: List[OrderHistoryResult])
-
-  case class StandardResponse[T](success: Boolean, message: String, result: T)
-
-  type BalanceResponse = StandardResponse[Option[BalanceResult]]
-  type BalancesResponse = StandardResponse[Option[List[BalanceResult]]]
-  type DepositAddressResponse = StandardResponse[Option[DepositAddressResult]]
-  type OrderHistoryResponse = StandardResponse[Option[List[OrderHistoryResult]]]
+  // All bittrex responses return some sort of result
+  type BalanceResponse = StandardResponse[BalanceResult]
+  type BalancesResponse = StandardResponse[List[BalanceResult]]
+  type DepositAddressResponse = StandardResponse[DepositAddressResult]
+  type OrderHistoryResponse = StandardResponse[List[OrderHistoryResult]]
+  type GetOpenOrdersResponse = StandardResponse[List[OrderResult]]
 }
 
 // collect your json format instances into a support trait:
 trait BittrexJsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
   import Bittrex._
 
-  // Results
+  // result formatters
   implicit val balanceResult          = jsonFormat5(BalanceResult)
   implicit val depositAddressResult   = jsonFormat2(DepositAddressResult)
   implicit val orderHistoryResult     = jsonFormat14(OrderHistoryResult)
+  implicit val openOrderResult        = jsonFormat12(OrderResult)
 
-  // Responses
-  implicit val balanceReponse         = jsonFormat3(StandardResponse[Option[BalanceResult]])
-  implicit val balancesResponse       = jsonFormat3(StandardResponse[Option[List[BalanceResult]]])
-  implicit val depositAddressResponse = jsonFormat3(StandardResponse[Option[DepositAddressResult]])
-  implicit val orderHistResponse      = jsonFormat3(StandardResponse[Option[List[OrderHistoryResult]]])
+  // formatters for bittrex responses requires result formatters above
+  implicit val balanceReponse         = jsonFormat3(StandardResponse[BalanceResult])
+  implicit val balancesResponse       = jsonFormat3(StandardResponse[List[BalanceResult]])
+  implicit val depositAddressResponse = jsonFormat3(StandardResponse[DepositAddressResult])
+  implicit val orderHistResponse      = jsonFormat3(StandardResponse[List[OrderHistoryResult]])
+  implicit val openOrderResponse      = jsonFormat3(StandardResponse[List[OrderResult]])
 }
+
 

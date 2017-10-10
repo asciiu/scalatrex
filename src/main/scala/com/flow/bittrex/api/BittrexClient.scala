@@ -121,5 +121,48 @@ class BittrexClient(implicit context: ExecutionContext, materializer: ActorMater
         Unmarshal(response.body).to[OrderHistoryResponse]
       }
   }
+
+  /** ***************************************************************
+    * Market API
+    * ***************************************************************/
+
+  // TODO /market/buylimit
+//  def marketBullLimit(auth: Auth, market: String, qty: Float, rate: Float): Future[OrderHistoryResponse] = {
+//    val endpoint = "/market/buylimit"
+//
+//    val path = wsClient.url(s"$base_url/$endpoint")
+//      .addQueryStringParameters("apikey" -> auth.apiKey)
+//      .addQueryStringParameters("nonce"  -> generateNonce)
+//      .addQueryStringParameters("market" -> market)
+//      .addQueryStringParameters("quantity" -> qty.toString)
+//      .addQueryStringParameters("rate" -> rate.toString)
+//
+//    auth.bittrexRequest(path)
+//      .get()
+//      .flatMap { response =>
+//        Unmarshal(response.body).to[OrderHistoryResponse]
+//      }
+//  }
+
+  // TODO /market/selllimit
+  // TODO /market/cancel
+  // TOdO /market/getopenorders
+  def marketGetOpenOrders(auth: Auth, market: Option[String] = None): Future[GetOpenOrdersResponse] = {
+    val endpoint = "market/getopenorders"
+
+    val path = wsClient.url(s"$base_url/$endpoint")
+      .addQueryStringParameters("apikey" -> auth.apiKey)
+      .addQueryStringParameters("nonce"  -> generateNonce)
+
+    if (market.nonEmpty) {
+      path.addQueryStringParameters("market" -> market.get)
+    }
+
+    auth.bittrexRequest(path)
+      .get()
+      .flatMap { response =>
+        Unmarshal(response.body).to[GetOpenOrdersResponse]
+      }
+  }
 }
 
