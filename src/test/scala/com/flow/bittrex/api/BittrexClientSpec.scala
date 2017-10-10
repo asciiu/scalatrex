@@ -19,34 +19,48 @@ class BittrexClientSpec extends FlatSpec with Matchers {
   val authorization = Auth(apikey, secret)
   val client = new BittrexClient()
 
-  "The BittrexClient" should "get account balance" in {
+  "The BittrexClient" should "handle invalid keys" in{
+    val currency = "BTC"
+    val futureBalance = client.accountGetBalance(Auth(" ", " "), currency)
+    val response = Await.result(futureBalance, 5 second)
+
+    response.success shouldEqual false
+    response.message shouldEqual "APIKEY_INVALID"
+  }
+
+  it should "get account balance" in {
     val currency = "BTC"
     val futureBalance = client.accountGetBalance(authorization, currency)
-    val balance = Await.result(futureBalance, 5 second)
+    val response = Await.result(futureBalance, 5 second)
 
-    balance.Currency shouldEqual currency
+    //balance.Currency shouldEqual currency
+    response.success shouldEqual true
+    response.result.get.Currency shouldEqual currency
   }
 
   it should "retrieve all account balances" in {
     val futureBalances = client.accountGetBalances(authorization)
-    val balances = Await.result(futureBalances, 5 second)
+    val response = Await.result(futureBalances, 5 second)
 
-    balances.length should be > 0
+    response.success shouldEqual true
+    response.result.get.length should be > 0
   }
 
   it should "retrieve an account deposit address" in {
     val currency = "BTC"
     val futureBalances = client.accountGetDepositAddress(authorization, currency)
-    val address = Await.result(futureBalances, 5 second)
+    val response = Await.result(futureBalances, 5 second)
 
-    address.Currency shouldEqual currency
+    response.success shouldEqual true
+    response.result.get.Currency shouldEqual currency
   }
 
   it should "get order history" in {
     val currency = "BTC"
     val futureHist = client.accountGetOrderHistory(authorization)
-    val history = Await.result(futureHist, 5 second)
+    val response = Await.result(futureHist, 5 second)
 
-    history.length should be > 0
+    response.success shouldEqual true
+    response.result.get.length should be > 0
   }
 }

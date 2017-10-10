@@ -10,6 +10,8 @@ import play.api.libs.ws.StandaloneWSRequest
   */
 case class Auth(val apiKey: String, secretKey: String) {
 
+  require(secretKey.length > 0, "Secret cannot be empty")
+
   private def bytesToHex(bytes: Array[Byte]): String = {
     val hexArray = "0123456789ABCDEF".toCharArray
     val hexChars = new Array[Char](bytes.length * 2)

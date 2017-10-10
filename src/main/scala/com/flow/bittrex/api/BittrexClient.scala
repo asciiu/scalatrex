@@ -2,7 +2,6 @@ package com.flow.bittrex.api
 
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.ActorMaterializer
-import play.api.libs.ws.StandaloneWSClient
 import play.api.libs.ws.ahc.StandaloneAhcWSClient
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -37,24 +36,6 @@ class BittrexClient(implicit context: ExecutionContext, materializer: ActorMater
     * ACCOUNT API
     * ***************************************************************/
 
-  /**
-    * Returns all currency balances.
-    * @param auth
-    * @return list of BalanceResult wrapped in future
-    */
-  def accountGetBalances(auth: Auth): Future[List[BalanceResult]] = {
-    val endpoint = "account/getbalances"
-
-    val path = wsClient.url(s"$base_url/$endpoint")
-      .addQueryStringParameters("apikey" -> auth.apiKey)
-      .addQueryStringParameters("nonce" -> generateNonce)
-
-    auth.bittrexRequest(path)
-      .get()
-      .flatMap { response =>
-        Unmarshal(response.body).to[BalancesResponse].map(bal => bal.result)
-      }
-  }
 
   /**
     * Returns account balance for a single currency
@@ -62,7 +43,7 @@ class BittrexClient(implicit context: ExecutionContext, materializer: ActorMater
     * @param currency name of currency. e.g BTC, ETC, ETH...
     * @return BalanceResult wrapped in future
     */
-  def accountGetBalance(auth: Auth, currency: String = "BTC"): Future[BalanceResult] = {
+  def accountGetBalance(auth: Auth, currency: String = "BTC"): Future[BalanceResponse] = {
     val endpoint = "account/getbalance"
 
     val path = wsClient.url(s"$base_url/$endpoint")
@@ -73,7 +54,26 @@ class BittrexClient(implicit context: ExecutionContext, materializer: ActorMater
     auth.bittrexRequest(path)
       .get()
       .flatMap { response =>
-        Unmarshal(response.body).to[BalanceResponse].map(bal => bal.result)
+        Unmarshal(response.body).to[BalanceResponse]
+      }
+  }
+
+  /**
+    * Returns all currency balances.
+    * @param auth
+    * @return list of BalanceResult wrapped in future
+    */
+  def accountGetBalances(auth: Auth): Future[BalancesResponse] = {
+    val endpoint = "account/getbalances"
+
+    val path = wsClient.url(s"$base_url/$endpoint")
+      .addQueryStringParameters("apikey" -> auth.apiKey)
+      .addQueryStringParameters("nonce" -> generateNonce)
+
+    auth.bittrexRequest(path)
+      .get()
+      .flatMap { response =>
+        Unmarshal(response.body).to[BalancesResponse]
       }
   }
 
@@ -83,7 +83,7 @@ class BittrexClient(implicit context: ExecutionContext, materializer: ActorMater
     * @param currency name
     * @return future wrapped DepositAddressResult
     */
-  def accountGetDepositAddress(auth: Auth, currency: String = "BTC"): Future[DepositAddressResult] = {
+  def accountGetDepositAddress(auth: Auth, currency: String = "BTC"): Future[DepositAddressResponse] = {
     val endpoint = "account/getdepositaddress"
 
     val path = wsClient.url(s"$base_url/$endpoint")
@@ -94,7 +94,7 @@ class BittrexClient(implicit context: ExecutionContext, materializer: ActorMater
     auth.bittrexRequest(path)
       .get()
       .flatMap { response =>
-        Unmarshal(response.body).to[DepositAddressResponse].map(bal => bal.result)
+        Unmarshal(response.body).to[DepositAddressResponse]
       }
 
   }
@@ -104,7 +104,7 @@ class BittrexClient(implicit context: ExecutionContext, materializer: ActorMater
   // TODO /account/getdeposithistory
   // TODO /account/getwithdrawalhistory
 
-  def accountGetOrderHistory(auth: Auth, market: Option[String] = None): Future[List[OrderHistoryResult]] = {
+  def accountGetOrderHistory(auth: Auth, market: Option[String] = None): Future[OrderHistoryResponse] = {
     val endpoint = "account/getorderhistory"
 
     val path = wsClient.url(s"$base_url/$endpoint")
@@ -118,7 +118,7 @@ class BittrexClient(implicit context: ExecutionContext, materializer: ActorMater
     auth.bittrexRequest(path)
       .get()
       .flatMap { response =>
-        Unmarshal(response.body).to[OrderHistoryResponse].map(bal => bal.result)
+        Unmarshal(response.body).to[OrderHistoryResponse]
       }
   }
 }

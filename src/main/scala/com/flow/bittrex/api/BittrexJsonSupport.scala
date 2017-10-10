@@ -3,10 +3,8 @@ package com.flow.bittrex.api
 import java.util.UUID
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import spray.json.DefaultJsonProtocol
 
-//case class BittrexNonce(Nounce: Int, Deltas: List[MarketUpdate])
-//case class BittrexSummary(H: String, M: String, A: List[BittrexNonce])
+import spray.json.DefaultJsonProtocol
 
 
 object Bittrex {
@@ -32,14 +30,20 @@ object Bittrex {
                                 ImmediateOrCancel: Boolean,
                                 Closed: String)
   // Responses
-  case class BalanceResponse(success: Boolean, message: String, result: BalanceResult)
+  //case class BalanceResponse(success: Boolean, message: String, result: BalanceResult)
 
-  case class BalancesResponse(success: Boolean, message: String, result: List[BalanceResult])
+  //case class BalancesResponse(success: Boolean, message: String, result: List[BalanceResult])
 
-  case class DepositAddressResponse(success: Boolean, message: String, result: DepositAddressResult)
+  //case class DepositAddressResponse(success: Boolean, message: String, result: DepositAddressResult)
 
-  case class OrderHistoryResponse(success: Boolean, message: String, result: List[OrderHistoryResult])
+  //case class OrderHistoryResponse(success: Boolean, message: String, result: List[OrderHistoryResult])
 
+  case class StandardResponse[T](success: Boolean, message: String, result: T)
+
+  type BalanceResponse = StandardResponse[Option[BalanceResult]]
+  type BalancesResponse = StandardResponse[Option[List[BalanceResult]]]
+  type DepositAddressResponse = StandardResponse[Option[DepositAddressResult]]
+  type OrderHistoryResponse = StandardResponse[Option[List[OrderHistoryResult]]]
 }
 
 // collect your json format instances into a support trait:
@@ -52,9 +56,9 @@ trait BittrexJsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
   implicit val orderHistoryResult     = jsonFormat14(OrderHistoryResult)
 
   // Responses
-  implicit val balanceResponse        = jsonFormat3(BalanceResponse)
-  implicit val balancesResponse       = jsonFormat3(BalancesResponse)
-  implicit val depositAddressResponse = jsonFormat3(DepositAddressResponse)
-  implicit val orderHistResponse      = jsonFormat3(OrderHistoryResponse)
+  implicit val balanceReponse         = jsonFormat3(StandardResponse[Option[BalanceResult]])
+  implicit val balancesResponse       = jsonFormat3(StandardResponse[Option[List[BalanceResult]]])
+  implicit val depositAddressResponse = jsonFormat3(StandardResponse[Option[DepositAddressResult]])
+  implicit val orderHistResponse      = jsonFormat3(StandardResponse[Option[List[OrderHistoryResult]]])
 }
 
