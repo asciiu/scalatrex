@@ -16,75 +16,83 @@ class BittrexClientSpec extends Specification {
   implicit val executor: ExecutionContext = actorSystem.dispatcher
   implicit val materializer: ActorMaterializer = ActorMaterializer()
 
+  val conf = BittrexConfig.config.right.get
+
   // test keys
-  val apikey = "749e532a159947aaa25b5587303ae6ee"
-  val secret = "645d31c5cf3b421c80225c365438da40"
+  val apikey = conf.bittrex.apikey
+  val secret = conf.bittrex.secret
   val authorization = Auth(apikey, secret)
   val client = new BittrexClient()
 
   override def is = { s2"""
-  This is a specification to check the 'PingSpec' Endpoint
-
   The 'BittrexClient' should
-    fake test $e1
+    handle invalid keys: $e1
+    get account balance: $e2
+    retrieve all account balances: $e3
+    retrieve an account deposit address: $e4
+    get order history: $e5
+    get open orders: $e6
   """
   }
 
-  def e1: MatchResult[Boolean] = true === true
+  def e1: MatchResult[Any] = handleInvalidKeys
+  def e2: MatchResult[Any] = getAccountBalance
+  def e3: MatchResult[Int] = retrieveAllAccountBalances
+  def e4: MatchResult[Any] = retrieveAccountDepositAddress
+  def e5: MatchResult[Int] = getOrderHistory
+  def e6: MatchResult[Int] = getOpenOrders
 
-  /*
-  "The BittrexClient" should "handle invalid keys" in{
+  def handleInvalidKeys: MatchResult[Any] = {
     val currency = "BTC"
     val futureBalance = client.accountGetBalance(Auth(" ", " "), currency)
-    val response = Await.result(futureBalance, 5 second)
+    val response = Await.result(futureBalance, 5.second)
 
     response.success shouldEqual false
     response.message shouldEqual "APIKEY_INVALID"
   }
 
-  it should "get account balance" in {
+  def getAccountBalance: MatchResult[Any] = {
     val currency = "BTC"
     val futureBalance = client.accountGetBalance(authorization, currency)
-    val response = Await.result(futureBalance, 5 second)
+    val response = Await.result(futureBalance, 5.second)
 
     //balance.Currency shouldEqual currency
     response.success shouldEqual true
     response.result.get.Currency shouldEqual currency
   }
 
-  it should "retrieve all account balances" in {
+  def retrieveAllAccountBalances: MatchResult[Int] = {
     val futureBalances = client.accountGetBalances(authorization)
-    val response = Await.result(futureBalances, 5 second)
+    val response = Await.result(futureBalances, 5.second)
 
     response.success shouldEqual true
     response.result.get.length should be > 0
   }
 
-  it should "retrieve an account deposit address" in {
+  def retrieveAccountDepositAddress: MatchResult[Any] = {
     val currency = "BTC"
     val futureBalances = client.accountGetDepositAddress(authorization, currency)
-    val response = Await.result(futureBalances, 5 second)
+    val response = Await.result(futureBalances, 5.second)
 
     response.success shouldEqual true
     response.result.get.Currency shouldEqual currency
   }
 
-  it should "get order history" in {
+  def getOrderHistory: MatchResult[Int] = {
     val currency = "BTC"
     val futureHist = client.accountGetOrderHistory(authorization)
-    val response = Await.result(futureHist, 5 second)
+    val response = Await.result(futureHist, 5.second)
 
     response.success shouldEqual true
     response.result.get.length should be > 0
   }
 
-  it should "get open orders" in {
+  def getOpenOrders: MatchResult[Int] = {
     val currency = "BTC"
     val futureOrders = client.marketGetOpenOrders(authorization)
-    val response = Await.result(futureOrders, 5 second)
+    val response = Await.result(futureOrders, 5.second)
 
     response.success shouldEqual true
     response.result.get.length should be > 0
   }
-  */
 }
