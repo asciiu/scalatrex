@@ -7,7 +7,7 @@ import org.scalatest._
 import scala.concurrent.{Await, ExecutionContext}
 import scala.concurrent.duration._
 
-class BittrexClientSpec extends FlatSpec with Matchers {
+class BittrexAccountSpec extends FlatSpec with Matchers {
 
   implicit val actorSystem = ActorSystem("main")
   implicit val executor: ExecutionContext = actorSystem.dispatcher

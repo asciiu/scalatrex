@@ -32,9 +32,9 @@ class BittrexClient(implicit context: ExecutionContext, materializer: ActorMater
     new String(Base64.getEncoder.encode(nonceBytes), "UTF-8")
   }
 
-  /** ***************************************************************
+  /*****************************************************************
     * ACCOUNT API
-    * ***************************************************************/
+    ****************************************************************/
 
 
   /**
@@ -211,9 +211,9 @@ class BittrexClient(implicit context: ExecutionContext, materializer: ActorMater
   }
 
 
-  /** ***************************************************************
+  /*****************************************************************
     * Market API
-    * ***************************************************************/
+    ****************************************************************/
 
   /**
     * Sets a limit buy order
@@ -309,5 +309,123 @@ class BittrexClient(implicit context: ExecutionContext, materializer: ActorMater
         Unmarshal(response.body).to[GetOpenOrdersResponse]
       }
   }
+
+  /*****************************************************************
+    * PUBLIC API
+    ****************************************************************/
+
+  /**
+    * Used to get the open and available trading markets at Bittrex along with other meta data.
+    * @return future wrapped MarketResponse
+    */
+  def publicGetMarkets(): Future[MarketResponse] = {
+    val endpoint = "public/getmarkets"
+    val request = wsClient.url(s"$base_url/$endpoint")
+    request
+      .get()
+      .flatMap { response =>
+        Unmarshal(response.body).to[MarketResponse]
+      }
+  }
+
+  /**
+    * Used to get all supported currencies at Bittrex along with other meta data.
+    * @return future wrapped CurrencyResponse
+    */
+  def publicGetCurrencies(): Future[CurrencyResponse] = {
+    val endpoint = "public/getcurrencies"
+    val request = wsClient.url(s"$base_url/$endpoint")
+    request
+      .get()
+      .flatMap { response =>
+        Unmarshal(response.body).to[CurrencyResponse]
+      }
+  }
+
+  /**
+    * Used to get the current tick values for a market.
+    * @param market name of market (BTC-XMR)
+    * @return future wrapped TickerResponse
+    */
+  def publicGetTicker(market: String): Future[TickerResponse] = {
+    val endpoint = "public/getticker"
+    val request = wsClient.url(s"$base_url/$endpoint")
+      .addQueryStringParameters("market" -> market)
+
+    request
+      .get()
+      .flatMap { response =>
+        Unmarshal(response.body).to[TickerResponse]
+      }
+  }
+
+  /**
+    * Used to get the last 24 hour summary of all active exchanges
+    * @return future wrapped MarketSummaryResponse
+    */
+  def publicGetMarketSummaries(): Future[MarketSummaryResponse] = {
+    val endpoint = "public/getmarketsummaries"
+    val request = wsClient.url(s"$base_url/$endpoint")
+
+    request
+      .get()
+      .flatMap { response =>
+        Unmarshal(response.body).to[MarketSummaryResponse]
+      }
+  }
+
+  /**
+    * Used to get the last 24 hour summary of a single market
+    * @param market name of market (BTC-LTC)
+    * @return future wrapped MarketSummaryResponse
+    */
+  def publicGetMarketSummary(market: String): Future[MarketSummaryResponse] = {
+    val endpoint = "public/getmarketsummary"
+    val request = wsClient.url(s"$base_url/$endpoint")
+      .addQueryStringParameters("market" -> market)
+
+    request
+      .get()
+      .flatMap { response =>
+        Unmarshal(response.body).to[MarketSummaryResponse]
+      }
+  }
+
+  /**
+    * Used to retrieve the orderbook for a given market
+    * @param market name of market (BTC-LTC)
+    * @param side is either 'both', 'buy', or 'sell'
+    * @return future wrapped OrderBookResponse
+    */
+  def publicGetOrderBook(market: String, side: String): Future[OrderBookResponse] = {
+    val endpoint = "public/getorderbook"
+    val request = wsClient.url(s"$base_url/$endpoint")
+      .addQueryStringParameters("market" -> market)
+      .addQueryStringParameters("type" -> side)
+
+    request
+      .get()
+      .flatMap { response =>
+        Unmarshal(response.body).to[OrderBookResponse]
+      }
+  }
+
+  /**
+    * Used to retrieve the latest trades that have occured for a specific market.
+    * @param market name of market (BTC-LTC)
+    * @return future wrapped OrderBookResponse
+    */
+  def publicGetMarketHistory(market: String): Future[MarketHistoryResponse] = {
+    val endpoint = "public/getmarkethistory"
+    val request = wsClient.url(s"$base_url/$endpoint")
+      .addQueryStringParameters("market" -> market)
+
+    request
+      .get()
+      .flatMap { response =>
+        Unmarshal(response.body).to[MarketHistoryResponse]
+      }
+  }
+
 }
 

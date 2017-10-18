@@ -6,7 +6,10 @@ import spray.json.DefaultJsonProtocol
 object Bittrex {
 
   // Results
-  case class BalanceResult(Currency: String, Balance: Float, Available: Float, Pending: Float,
+  case class BalanceResult(Currency: String,
+                           Balance: Double,
+                           Available: Double,
+                           Pending: Double,
                            CryptoAddress: Option[String])
 
   case class DepositAddressResult(Currency: String, address: Option[String])
@@ -15,12 +18,12 @@ object Bittrex {
                                 Exchange: String,
                                 TimeStamp: String,
                                 OrderType: String,
-                                Limit: Float,
-                                Quantity: Float,
-                                QuantityRemaining: Float,
-                                Commission: Float,
-                                Price: Float,
-                                PricePerUnit: Float,
+                                Limit: Double,
+                                Quantity: Double,
+                                QuantityRemaining: Double,
+                                Commission: Double,
+                                Price: Double,
+                                PricePerUnit: Double,
                                 IsConditional: Boolean,
                                 Condition: String,
                                 ImmediateOrCancel: Boolean,
@@ -29,11 +32,11 @@ object Bittrex {
   case class OrderResult(OrderUuid: String,
                          Exchange: String,
                          OrderType: String,
-                         Limit: Float,
-                         Quantity: Float,
-                         QuantityRemaining: Float,
-                         CommissionPaid: Float,
-                         Price: Float,
+                         Limit: Double,
+                         Quantity: Double,
+                         QuantityRemaining: Double,
+                         CommissionPaid: Double,
+                         Price: Double,
                          CancelInitiated: Boolean,
                          Opened: String,
                          ImmediateOrCancel: Boolean,
@@ -73,13 +76,61 @@ object Bittrex {
                               Canceled: Boolean,
                               InvalidAddress: Boolean)
 
-  case class DepositResult(Id: Int,
+  case class DepositResult(Id: Long,
                            Amount: Double,
                            Currency: String,
                            Confirmations: Int,
                            LastUpdated: String,
                            TxId: String,
                            CryptoAddress: String)
+
+  case class MarketResult(MarketCurrency: String,
+                          BaseCurrency: String,
+                          MarketCurrencyLong: String,
+                          BaseCurrencyLong: String,
+                          MinTradeSize: Double,
+                          MarketName: String,
+                          IsActive: Boolean,
+                          Created: String)
+
+  case class CurrencyResult(Currency: String,
+                            CurrencyLong: String,
+                            MinConfirmation: Int,
+                            TxFee: Double,
+                            IsActive: Boolean,
+                            CoinType: String)
+
+  case class TickerResult(Bid: Double,
+                          Ask: Double,
+                          Last: Double)
+
+  case class MarketSummaryResult(MarketName: String,
+                                 High: Double,
+                                 Low: Double,
+                                 Volume: Double,
+                                 Last: Double,
+                                 BaseVolume: Double,
+                                 TimeStamp: String,
+                                 Bid: Double,
+                                 Ask: Double,
+                                 OpenBuyOrders: Int,
+                                 OpenSellOrders: Int,
+                                 PrevDay: Double,
+                                 Created: String)
+
+  case class OrderBookEntryResult(Quantity: Double,
+                                  Rate: Double)
+
+  case class OrderBookResult(buy: List[OrderBookEntryResult],
+                             sell: List[OrderBookEntryResult])
+
+  case class MarketHistoryResult(Id: Long,
+                                 TimeStamp: String,
+                                 Quantity: Double,
+                                 Price: Double,
+                                 Total: Double,
+                                 FillType: String,
+                                 OrderType: String)
 
   // Standard bittrex response json has success, message, and option result
   case class StandardResponse[T](success: Boolean, message: String, result: Option[T])
@@ -95,6 +146,12 @@ object Bittrex {
   type SingleOrderResponse = StandardResponse[SingleOrderResult]
   type HistoryResponse = StandardResponse[List[WithdrawalResult]]
   type DepositResponse = StandardResponse[List[DepositResult]]
+  type MarketResponse = StandardResponse[List[MarketResult]]
+  type CurrencyResponse = StandardResponse[List[CurrencyResult]]
+  type TickerResponse = StandardResponse[TickerResult]
+  type MarketSummaryResponse = StandardResponse[List[MarketSummaryResult]]
+  type OrderBookResponse = StandardResponse[OrderBookResult]
+  type MarketHistoryResponse = StandardResponse[List[MarketHistoryResult]]
 }
 
 // collect your json format instances into a support trait:
@@ -110,6 +167,13 @@ trait BittrexJsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
   implicit val singleOrderResult      = jsonFormat18(SingleOrderResult)
   implicit val histResult             = jsonFormat11(WithdrawalResult)
   implicit val depositResult          = jsonFormat7(DepositResult)
+  implicit val marketResult           = jsonFormat8(MarketResult)
+  implicit val currencyResult         = jsonFormat6(CurrencyResult)
+  implicit val tickerResult           = jsonFormat3(TickerResult)
+  implicit val marketSummaryResult    = jsonFormat13(MarketSummaryResult)
+  implicit val orderBookEntryResult   = jsonFormat2(OrderBookEntryResult)
+  implicit val orderBookResult        = jsonFormat2(OrderBookResult)
+  implicit val marketHistoryResult    = jsonFormat7(MarketHistoryResult)
 
   // formatters for bittrex responses requires result formatters above
   implicit val balanceReponse         = jsonFormat3(StandardResponse[BalanceResult])
@@ -122,6 +186,12 @@ trait BittrexJsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
   implicit val singleOrderResponse    = jsonFormat3(StandardResponse[SingleOrderResult])
   implicit val histResponse           = jsonFormat3(StandardResponse[List[WithdrawalResult]])
   implicit val depositResponse        = jsonFormat3(StandardResponse[List[DepositResult]])
+  implicit val marketResponse         = jsonFormat3(StandardResponse[List[MarketResult]])
+  implicit val currencyResponse       = jsonFormat3(StandardResponse[List[CurrencyResult]])
+  implicit val tickerResponse         = jsonFormat3(StandardResponse[TickerResult])
+  implicit val marketSummaryResponse  = jsonFormat3(StandardResponse[List[MarketSummaryResult]])
+  implicit val orderBookResponse      = jsonFormat3(StandardResponse[OrderBookResult])
+  implicit val marketHistoryResponse  = jsonFormat3(StandardResponse[List[MarketHistoryResult]])
 }
 
 
