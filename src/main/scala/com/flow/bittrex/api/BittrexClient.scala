@@ -96,14 +96,35 @@ class BittrexClient(implicit context: ExecutionContext, materializer: ActorMater
       .flatMap { response =>
         Unmarshal(response.body).to[DepositAddressResponse]
       }
-
   }
 
-  // TODO /account/withdraw
-  // TODO /account/getorder
-  // TODO /account/getdeposithistory
-  // TODO /account/getwithdrawalhistory
+  /**
+    * Get order details
+    * @param auth
+    * @param uuid of order
+    * @return future wrapped SingleOrderResponse
+    */
+  def accountGetOrder(auth: Auth, uuid: String): Future[SingleOrderResponse] = {
+    val endpoint = "account/getorder"
 
+    val path = wsClient.url(s"$base_url/$endpoint")
+      .addQueryStringParameters("apikey" -> auth.apiKey)
+      .addQueryStringParameters("nonce" -> generateNonce)
+      .addQueryStringParameters("uuid" -> uuid)
+
+    auth.bittrexRequest(path)
+      .get()
+      .flatMap { response =>
+        Unmarshal(response.body).to[SingleOrderResponse]
+      }
+  }
+
+  /**
+    * Get account order history
+    * @param auth
+    * @param market
+    * @return future order history response
+    */
   def accountGetOrderHistory(auth: Auth, market: Option[String] = None): Future[OrderHistoryResponse] = {
     val endpoint = "account/getorderhistory"
 
@@ -122,30 +143,148 @@ class BittrexClient(implicit context: ExecutionContext, materializer: ActorMater
       }
   }
 
+  /**
+    * Get withdrawal history for currency.
+    * @param auth
+    * @param currency name
+    * @return future wrapped WithdrawalHistoryResponse
+    */
+  def accountGetWithdrawalHistory(auth: Auth, currency: String = "BTC"): Future[HistoryResponse] = {
+    val endpoint = "account/getwithdrawalhistory"
+
+    val path = wsClient.url(s"$base_url/$endpoint")
+      .addQueryStringParameters("apikey" -> auth.apiKey)
+      .addQueryStringParameters("nonce" -> generateNonce)
+      .addQueryStringParameters("currency" -> currency)
+
+    auth.bittrexRequest(path)
+      .get()
+      .flatMap { response =>
+        Unmarshal(response.body).to[HistoryResponse]
+      }
+  }
+
+  /**
+    * Withdraw from exchange.
+    * @param auth
+    * @param currency name
+    * @param quantity
+    * @param address to withdraw to
+    * @return future wrapped DepositAddressResult
+    */
+  def accountWithdraw(auth: Auth, currency: String = "BTC", quantity: Double, address: String): Future[UuidResponse] = {
+    val endpoint = "account/withdraw"
+
+    val path = wsClient.url(s"$base_url/$endpoint")
+      .addQueryStringParameters("apikey" -> auth.apiKey)
+      .addQueryStringParameters("nonce" -> generateNonce)
+      .addQueryStringParameters("currency" -> currency)
+      .addQueryStringParameters("quantity" -> quantity.toString)
+      .addQueryStringParameters("address" -> address)
+
+    auth.bittrexRequest(path)
+      .get()
+      .flatMap { response =>
+        Unmarshal(response.body).to[UuidResponse]
+      }
+  }
+
+  /**
+    * Get deposit history for currency.
+    * @param auth
+    * @param currency name
+    * @return future wrapped HistoryResponse
+    */
+  def accountGetDepositHistory(auth: Auth, currency: String = "BTC"): Future[DepositResponse] = {
+    val endpoint = "account/getdeposithistory"
+
+    val path = wsClient.url(s"$base_url/$endpoint")
+      .addQueryStringParameters("apikey" -> auth.apiKey)
+      .addQueryStringParameters("nonce" -> generateNonce)
+      .addQueryStringParameters("currency" -> currency)
+
+    auth.bittrexRequest(path)
+      .get()
+      .flatMap { response =>
+        Unmarshal(response.body).to[DepositResponse]
+      }
+  }
+
+
   /** ***************************************************************
     * Market API
     * ***************************************************************/
 
-  // TODO /market/buylimit
-//  def marketBullLimit(auth: Auth, market: String, qty: Float, rate: Float): Future[OrderHistoryResponse] = {
-//    val endpoint = "/market/buylimit"
-//
-//    val path = wsClient.url(s"$base_url/$endpoint")
-//      .addQueryStringParameters("apikey" -> auth.apiKey)
-//      .addQueryStringParameters("nonce"  -> generateNonce)
-//      .addQueryStringParameters("market" -> market)
-//      .addQueryStringParameters("quantity" -> qty.toString)
-//      .addQueryStringParameters("rate" -> rate.toString)
-//
-//    auth.bittrexRequest(path)
-//      .get()
-//      .flatMap { response =>
-//        Unmarshal(response.body).to[OrderHistoryResponse]
-//      }
-//  }
+  /**
+    * Sets a limit buy order
+    * @param auth
+    * @param market name of market - example: BTC-LTC
+    * @param qty
+    * @param rate
+    * @return a future wrapped order uuid response
+    */
+  def marketBuyLimit(auth: Auth, market: String, qty: Double, rate: Double): Future[UuidResponse] = {
+    val endpoint = "market/buylimit"
 
-  // TODO /market/selllimit
-  // TODO /market/cancel
+    val path = wsClient.url(s"$base_url/$endpoint")
+      .addQueryStringParameters("apikey" -> auth.apiKey)
+      .addQueryStringParameters("nonce"  -> generateNonce)
+      .addQueryStringParameters("market" -> market)
+      .addQueryStringParameters("quantity" -> qty.toString)
+      .addQueryStringParameters("rate" -> rate.toString)
+
+    auth.bittrexRequest(path)
+      .get()
+      .flatMap { response =>
+        Unmarshal(response.body).to[UuidResponse]
+      }
+  }
+
+  /**
+    * Set a limit sell order.
+    * @param auth
+    * @param market name of market - example: BTC-XMR
+    * @param qty
+    * @param rate
+    * @return future wrapped order uuid response
+    */
+  def marketSellLimit(auth: Auth, market: String, qty: Double, rate: Double): Future[UuidResponse] = {
+    val endpoint = "market/selllimit"
+
+    val path = wsClient.url(s"$base_url/$endpoint")
+      .addQueryStringParameters("apikey" -> auth.apiKey)
+      .addQueryStringParameters("nonce"  -> generateNonce)
+      .addQueryStringParameters("market" -> market)
+      .addQueryStringParameters("quantity" -> qty.toString)
+      .addQueryStringParameters("rate" -> rate.toString)
+
+    auth.bittrexRequest(path)
+      .get()
+      .flatMap { response =>
+        Unmarshal(response.body).to[UuidResponse]
+      }
+  }
+
+  /**
+    * Cancels an open order.
+    * @param auth
+    * @param uuid
+    * @return future wrapped null response
+    */
+  def marketCancel(auth: Auth, uuid: String): Future[StandardNullResponse] = {
+    val endpoint = "market/cancel"
+
+    val path = wsClient.url(s"$base_url/$endpoint")
+      .addQueryStringParameters("apikey" -> auth.apiKey)
+      .addQueryStringParameters("nonce"  -> generateNonce)
+      .addQueryStringParameters("uuid" -> uuid)
+
+    auth.bittrexRequest(path)
+      .get()
+      .flatMap { response =>
+        Unmarshal(response.body).to[StandardNullResponse]
+      }
+  }
 
   /**
     * Get open orders.

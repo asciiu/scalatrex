@@ -14,8 +14,8 @@ class BittrexClientSpec extends FlatSpec with Matchers {
   implicit val materializer: ActorMaterializer = ActorMaterializer()
 
   // test keys
-  val apikey = "749e532a159947aaa25b5587303ae6ee"
-  val secret = "645d31c5cf3b421c80225c365438da40"
+  val apikey = "your_key"
+  val secret = "your_secret"
   val authorization = Auth(apikey, secret)
   val client = new BittrexClient()
 
@@ -68,6 +68,55 @@ class BittrexClientSpec extends FlatSpec with Matchers {
     val currency = "BTC"
     val futureOrders = client.marketGetOpenOrders(authorization)
     val response = Await.result(futureOrders, 5 second)
+
+    response.success shouldEqual true
+    response.result.get.length should be > 0
+  }
+
+  it should "set a limit order" in {
+    val market = "BTC-XLM"
+    val futureUuid = client.marketSellLimit(authorization, market, 1.00000000, 1.00000000)
+    val response1 = Await.result(futureUuid, 5 second)
+
+    response1.success shouldEqual true
+    response1.result.isDefined shouldEqual true
+
+    // it should also get details for an open order
+    val uuid = response1.result.get.uuid
+    val futureUuid2 = client.accountGetOrder(authorization, uuid)
+    val response2 = Await.result(futureUuid2, 5 second)
+
+    response2.success shouldEqual true
+    response2.result.get.IsOpen shouldEqual true
+
+    // finally it should cancel open orders
+    val futureUuid3 = client.marketCancel(authorization, uuid)
+    val response3 = Await.result(futureUuid3, 5 second)
+
+    response3.success shouldEqual true
+  }
+
+  it should "execute a withdrawal" in {
+    val currency = "XLM"
+    val futureUuid = client.accountWithdraw(authorization, currency, 1.0, "fakeddress")
+    val response = Await.result(futureUuid, 5 second)
+
+    response.success shouldEqual false
+  }
+
+  it should "get withdrawal history" in {
+    val currency = "BTC"
+    val futureUuid = client.accountGetWithdrawalHistory(authorization, currency)
+    val response = Await.result(futureUuid, 5 second)
+
+    response.success shouldEqual true
+    response.result.get.length should be > 0
+  }
+
+  it should "get deposit history" in {
+    val currency = "BTC"
+    val futureUuid = client.accountGetDepositHistory(authorization, currency)
+    val response = Await.result(futureUuid, 5 second)
 
     response.success shouldEqual true
     response.result.get.length should be > 0
